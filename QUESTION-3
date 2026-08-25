@@ -1,0 +1,66 @@
+Print("N Punith Kumar")
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
+np.random.seed(42)
+N = 100000
+age = np.random.randint(18, 80, N)
+blood_pressure = np.random.randint(90, 180, N)
+glucose = np.random.randint(70, 250, N)
+cholesterol = np.random.randint(120, 300, N)
+disease = (
+    (glucose > 150) &
+    (blood_pressure > 130)
+).astype(int)
+noise = np.random.rand(N) < 0.10
+disease = np.where(noise, 1 - disease, disease)
+X = np.column_stack(
+    (age, blood_pressure, glucose, cholesterol)
+)
+y = disease
+X_sample, _, y_sample, _ = train_test_split(
+    X,
+    y,
+    train_size=10000,
+    stratify=y,
+    random_state=42
+)
+print("Original Dataset:", len(X))
+print("Sample Dataset:", len(X_sample))
+print("\nOriginal Class Distribution:")
+print(np.bincount(y))
+print("\nSample Class Distribution:")
+print(np.bincount(y_sample))
+X_train, X_test, y_train, y_test = train_test_split(
+    X_sample,
+    y_sample,
+    test_size=0.20,
+    stratify=y_sample,
+    random_state=42
+)
+model = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
+model.fit(X_train, y_train)
+prediction = model.predict(X_test)
+accuracy = accuracy_score(y_test, prediction)
+print("\nModel Accuracy:",
+      round(accuracy * 100, 2), "%")
+print("\nClassification Report:")
+print(classification_report(y_test, prediction))
+labels = ["No Disease", "Disease"]
+original = np.bincount(y)
+sample = np.bincount(y_sample)
+x = np.arange(2)
+width = 0.35
+plt.bar(x - width/2, original, width, label="Original")
+plt.bar(x + width/2, sample, width, label="Sample")
+plt.xticks(x, labels)
+plt.xlabel("Patient Category")
+plt.ylabel("Number of Patients")
+plt.title("Stratified Sampling Comparison")
+plt.legend()
+plt.show()
