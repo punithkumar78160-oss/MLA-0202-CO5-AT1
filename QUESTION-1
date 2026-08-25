@@ -1,0 +1,125 @@
+print("N Punith Kumar-192525156")
+import random
+grid = [
+    [0, 0, 0, 1, 0],
+    [0, 1, 0, 1, 0],
+    [0, 0, 0, 0, 0],
+    [1, 0, 1, 0, 0]
+]
+start = (0, 0)
+goal = (3, 4)
+actions = {
+    "U": (-1, 0),
+    "D": (1, 0),
+    "L": (0, -1),
+    "R": (0, 1)
+}
+gamma = 0.9
+states = []
+for r in range(4):
+    for c in range(5):
+        if grid[r][c] == 0:
+            states.append((r, c))
+V = {s: 0 for s in states}
+def move(state, action):
+    r, c = state
+    dr, dc = actions[action]
+    nr, nc = r + dr, c + dc
+
+    if nr < 0 or nr >= 4 or nc < 0 or nc >= 5:
+        return state
+
+    if grid[nr][nc] == 1:
+        return state
+
+    return (nr, nc)
+for iteration in range(100):
+    newV = V.copy()
+
+    for s in states:
+
+        if s == goal:
+            newV[s] = 100
+            continue
+
+        values = []
+
+        for a in actions:
+
+            intended = move(s, a)
+            value = -1 + gamma * (
+                0.8 * V[intended] +
+                0.2 * V[s]
+            )
+            if intended == s:
+                value -= 5
+
+            values.append(value)
+
+        newV[s] = max(values)
+
+    V = newV
+policy = {}
+for s in states:
+
+    if s == goal:
+        policy[s] = "G"
+        continue
+
+    best_action = None
+    best_value = -999999
+
+    for a in actions:
+        next_state = move(s, a)
+
+        value = -1 + gamma * (
+            0.8 * V[next_state] +
+            0.2 * V[s]
+        )
+
+        if next_state == s:
+            value -= 5
+
+        if value > best_value:
+            best_value = value
+            best_action = a
+
+    policy[s] = best_action
+print("Optimal Navigation Policy:")
+for r in range(4):
+    row = ""
+    for c in range(5):
+        if grid[r][c] == 1:
+            row += " X "
+        else:
+            row += " " + policy[(r, c)] + " "
+    print(row)
+print("\nState Values:")
+for r in range(4):
+    print([round(V[(r, c)], 2) if grid[r][c] == 0 else "X"
+           for c in range(5)])
+state = start
+path = [state]
+battery = 30
+for step in range(25):
+
+   if state == goal:
+        break
+
+    action = policy[state]
+    if random.random() < 0.8:
+        next_state = move(state, action)
+    else:
+        next_state = state
+
+    state = next_state
+    path.append(state)
+    battery -= 1
+print("\nRobot Path:")
+print(path)
+print("\nMoves:", len(path) - 1)
+print("Battery Remaining:", battery)
+if state == goal:
+    print("Destination Reached!")
+else:
+    print("Destination Not Reached")
